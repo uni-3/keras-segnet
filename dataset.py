@@ -8,16 +8,13 @@ from keras.applications import imagenet_utils
 
 import os
 
-# Copy the data to this dir here in the SegNet project /CamVid from here:
-# https://github.com/alexgkendall/SegNet-Tutorial
 DataPath = './CamVid/'
 data_shape = 360*480
 
-
 class Dataset:
-    def __init__(self, classes):
-        self.train_file = '5_train.txt'
-        self.test_file = '5_test.txt'
+    def __init__(self, classes=12, train_file='train.txt', test_file='test.txt'):
+        self.train_file = train_file
+        self.test_file = test_file
         self.data_shape = 360*480
         self.classes = classes
 
@@ -55,13 +52,11 @@ class Dataset:
             txt = [line.split(' ') for line in txt]
 
         for i in range(len(txt)):
-            #data.append(np.rollaxis(normalized(cv2.imread(os.getcwd() + txt[i][0][7:])),2))
-            #label.append(one_hot_it(cv2.imread(os.getcwd() + txt[i][1][7:][:-1])[:,:,0]))
             data.append(self.normalized(cv2.imread(os.getcwd() + txt[i][0][7:])))
             label.append(self.one_hot_it(cv2.imread(os.getcwd() + txt[i][1][7:][:-1])[:,:,0]))
             print('.',end='')
-        print("train data file", os.getcwd() + txt[i][0][7:])
-        print("label data raw", cv2.imread(os.getcwd() + '/CamVid/trainannot/0001TP_006690.png'))
+        #print("train data file", os.getcwd() + txt[i][0][7:])
+        #print("label data raw", cv2.imread(os.getcwd() + '/CamVid/trainannot/0001TP_006690.png'))
         return np.array(data), np.array(label)
 
 

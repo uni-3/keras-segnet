@@ -2,23 +2,31 @@
 import os
 import glob
 import numpy as np
-import cv2
+import keras
+
 from model import SegNet
-#from dataset import load_data, preprocess_inputs, reshape_labels
+
 import dataset
 
 input_shape = (360, 480, 3)
 classes = 12
-epochs = 10
-batch_size = 4
+epochs = 100
+batch_size = 1
+log_filepath='./logs_1/'
 
 data_shape = 360*480
 
 class_weighting = [0.2595, 0.1826, 4.5640, 0.1417, 0.5051, 0.3826, 9.6446, 1.8418, 6.6823, 6.2478, 3.0, 7.3614]
 
+## set gpu usage
+import tensorflow as tf
+config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True, per_process_gpu_memory_fraction = 0.8))
+session = tf.Session(config=config)
+keras.backend.tensorflow_backend.set_session(session)
+
 def main():
     print("loading data...")
-    ds = dataset.Dataset(classes=classes)
+    ds = dataset.Dataset(test_file='test_5.txt', classes=classes)
     train_X, train_y = ds.load_data('train') # need to implement, y shape is (None, 360, 480, classes)
 
     train_X = ds.preprocess_inputs(train_X)
@@ -29,20 +37,17 @@ def main():
     test_X, test_y = ds.load_data('test') # need to implement, y shape is (None, 360, 480, classes)
     test_X = ds.preprocess_inputs(test_X)
     test_Y = ds.reshape_labels(test_y)
-    """
-    """
 
+    tb_cb = keras.callbacks.TensorBoard(log_dir=log_filepath, histogram_freq=1, write_graph=True, write_images=True)
     print("creating model...")
     model = SegNet(input_shape=input_shape, classes=classes)
     model.compile(loss="categorical_crossentropy", optimizer='adadelta', metrics=["accuracy"])
 
     model.fit(train_X, train_Y, batch_size=batch_size, epochs=epochs,
-              verbose=1, class_weight=class_weighting , validation_data=(test_X, test_Y), shuffle=True)
-    #model.fit(train_X, train_Y, batch_size=batch_size, epochs=nb_epoch, verbose=1)
-    model.save('seg_5_data.h5')
+              verbose=1, class_weight=class_weighting , validation_data=(test_X, test_Y), shuffle=True
+              , callbacks=[tb_cb])
 
+    model.save('s.h5')
 
-# X data
-# Y label
 if __name__ == '__main__':
     main()
